@@ -42,32 +42,10 @@ function buildDirectionsUrl(userCoordinates: UserCoordinates | null, destination
   const target = `${destination[1]},${destination[0]}`
   return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${target}&travelmode=driving`
 }
-export const workHallBaseMapStyle: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    carto: {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-      ],
-      tileSize: 256,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    },
-  },
-  layers: [
-    {
-      id: 'carto-base',
-      type: 'raster',
-      source: 'carto',
-      minzoom: 0,
-      maxzoom: 20,
-    },
-  ],
-}
+// OpenFreeMap's light "positron" style: free, no API key, OpenStreetMap data (it carries its own
+// attribution). This replaces CARTO's free raster tiles, which now return an "API KEY REQUIRED"
+// watermark instead of a map. For heavy traffic, consider a paid plan or self-hosting.
+export const workHallBaseMapStyle = 'https://tiles.openfreemap.org/styles/positron'
 interface LocationsMapSectionProps {
   selectedLocationId?: string
   onSelectedLocationChange?: (locationId: string) => void

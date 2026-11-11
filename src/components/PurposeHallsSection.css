@@ -59,6 +59,9 @@
   display: grid;
   gap: clamp(14px, 1.8vh, 22px);
   margin-bottom: var(--ph-header-bottom-margin);
+  padding-bottom: clamp(14px, 2.2vh, 26px);
+  /* A fine rule under the heading, like the masthead of a printed page. */
+  border-bottom: 1px solid rgba(21, 17, 13, 0.16);
   min-width: 0;
   width: 100%;
 }
@@ -77,7 +80,7 @@
 .ph-clean-kicker-square {
   width: var(--ph-kicker-square);
   height: var(--ph-kicker-square);
-  background: #ffec8d;
+  background: #d26d45;
   flex-shrink: 0;
 }
 
@@ -144,6 +147,48 @@
   max-width: min(100%, 42rem);
 }
 
+/* Small editorial label above each title: a number and a short descriptor. */
+.ph-clean-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #857f78;
+  font-family: var(--sans);
+  font-size: clamp(11px, 1.2vh, 13px);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1;
+  opacity: 0.7;
+  transform: translateX(0);
+  transition:
+    transform var(--ph-motion-duration) var(--ph-motion-ease),
+    color var(--ph-motion-duration) var(--ph-motion-ease),
+    opacity var(--ph-motion-duration) var(--ph-motion-ease);
+}
+
+.ph-clean-item-index {
+  font-variant-numeric: tabular-nums;
+}
+
+.ph-clean-item-tag::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  margin-right: 12px;
+  vertical-align: middle;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.ph-clean-item.is-active .ph-clean-item-meta,
+.ph-clean-section.is-reduced-motion .ph-clean-item-meta {
+  color: #d26d45;
+  opacity: 1;
+  transform: translateX(20px);
+}
+
 .ph-clean-item-copy h3 {
   margin: 0;
   color: #857f78;
@@ -151,6 +196,7 @@
   font-size: var(--ph-title-size);
   font-weight: 700;
   line-height: 1.08;
+  letter-spacing: -0.012em;
   transform: scale(1) translateX(0);
   transform-origin: left center;
   transition:
@@ -198,13 +244,35 @@
   transform: translateX(20px);
 }
 
+/* A hairline rail runs down the list; a ringed dot slides along it to the active item. */
+.ph-clean-list-rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--ph-indicator-size) / 2 - 0.5px);
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(21, 17, 13, 0) 0%,
+    rgba(21, 17, 13, 0.28) 14%,
+    rgba(21, 17, 13, 0.28) 86%,
+    rgba(21, 17, 13, 0) 100%
+  );
+  pointer-events: none;
+}
+
 .ph-clean-indicator {
   position: absolute;
   top: 0;
   left: 0;
   width: var(--ph-indicator-size);
   height: var(--ph-indicator-size);
+  border-radius: 50%;
   background: #d26d45;
+  box-shadow:
+    0 0 0 4px #fbfaf7,
+    0 0 0 5px rgba(210, 109, 69, 0.55);
   transform-origin: center;
   transition:
     transform var(--ph-motion-duration) var(--ph-motion-ease),
@@ -232,12 +300,27 @@
   overflow: hidden;
   border-radius: 0;
   background: #e7dccd;
-  box-shadow: none;
+  box-shadow: 0 30px 60px -34px rgba(40, 25, 15, 0.45);
+  /* A fine line standing off the photo, like a mat around a print. */
+  outline: 1px solid rgba(21, 17, 13, 0.5);
+  outline-offset: 12px;
+}
+
+/* A light inner line, echoing the amenity cards. */
+.ph-clean-frame::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  z-index: 3;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  pointer-events: none;
 }
 
 .ph-clean-frame-layer {
   position: absolute;
   inset: 0;
+  /* Clips the zoomed photo to its own box, so waiting photos can't peek into the frame. */
+  overflow: hidden;
   filter: none;
   will-change: transform, opacity, filter;
   transition:
@@ -275,19 +358,54 @@
   inset: 0;
   background:
     linear-gradient(180deg, rgba(18, 16, 14, 0.05) 0%, rgba(18, 16, 14, 0) 34%),
-    linear-gradient(0deg, rgba(18, 16, 14, 0.24) 0%, rgba(18, 16, 14, 0.02) 36%, rgba(18, 16, 14, 0) 58%);
+    linear-gradient(0deg, rgba(18, 16, 14, 0.62) 0%, rgba(18, 16, 14, 0.12) 34%, rgba(18, 16, 14, 0) 56%);
 }
 
-.ph-clean-frame-layer span {
+/* Caption: a counter on the left, the hall's name on the right, over a fine rule. */
+.ph-clean-frame-caption {
   position: absolute;
-  left: clamp(20px, 2vw, 30px);
-  bottom: clamp(20px, 2.2vw, 30px);
+  left: clamp(22px, 2vw, 32px);
+  right: clamp(22px, 2vw, 32px);
+  bottom: clamp(22px, 2.2vw, 32px);
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
   color: #ffffff;
+}
+
+.ph-clean-frame-caption b {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.ph-clean-frame-caption i {
   font-family: var(--display);
-  font-size: clamp(26px, 2vw, 38px);
+  font-size: clamp(22px, 1.7vw, 32px);
+  font-style: normal;
   font-weight: 700;
   line-height: 1.1;
-  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  text-align: right;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* The photo settles in with a slow zoom as it arrives. */
+.ph-clean-frame-layer img {
+  transform: scale(1.07);
+  transition: transform calc(var(--ph-motion-duration) * 2.2) var(--ph-motion-ease);
+}
+
+.ph-clean-frame-layer.is-active img,
+.ph-clean-frame-layer.is-entering-forward img,
+.ph-clean-frame-layer.is-entering-backward img {
+  transform: scale(1);
 }
 
 .ph-clean-frame-layer.is-active {
@@ -482,10 +600,38 @@
   }
 }
 
+@media (max-width: 1024px) {
+  /* Stacked layout: labels stay in line with the titles. */
+  .ph-clean-item-meta,
+  .ph-clean-item.is-active .ph-clean-item-meta,
+  .ph-clean-section.is-reduced-motion .ph-clean-item-meta {
+    transform: none;
+  }
+
+  .ph-clean-item.is-active .ph-clean-item-meta {
+    color: #d26d45;
+    opacity: 1;
+  }
+
+  .ph-clean-list-rail::before {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .ph-clean-section {
     --ph-shell-width: min(calc(100vw - 20px), 640px);
     --ph-heading-size: clamp(36px, 11vw, 52px);
     --ph-title-size: clamp(28px, 7vw, 36px);
   }
+
+  .ph-clean-frame {
+    outline-offset: 8px;
+  }
+}
+
+/* Reduced motion: no zoom on the photos. */
+.ph-clean-section.is-reduced-motion .ph-clean-frame-layer img {
+  transform: none;
+  transition: none;
 }

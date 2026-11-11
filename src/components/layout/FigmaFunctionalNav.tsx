@@ -57,6 +57,16 @@ const figmaNavGroups: FigmaNavGroup[] = [
   },
 ]
 
+// Docking: the bar docks once the page is scrolled past DOCK_ON, and undocks back above DOCK_OFF.
+// Two different values stop it flickering right at the edge.
+const DOCK_ON = 90
+const DOCK_OFF = 40
+// Where the docked bar rests: distance from the top and right edges of the screen, in px.
+const DOCK_TOP = 16
+const DOCK_MARGIN = 24
+// The full nav bar only shows from this width up; below it the compact bar is used.
+const FULL_NAV_QUERY = '(min-width: 1281px)'
+
 function DownArrowBadge() {
   return (
     <span className="figma-nav__badge" aria-hidden="true">
@@ -96,6 +106,15 @@ export function FigmaFunctionalNav({ isLoaded }: { isLoaded: boolean }) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const [dropdownLeft, setDropdownLeft] = useState(0)
+  // Sliding highlight: follows the hovered item, and rests on the open menu's item.
+  const [hoveredGroupId, setHoveredGroupId] = useState<string | null>(null)
+  const activeGroupId = hoveredGroupId ?? openGroupId
+  const gliderRef = useRef<HTMLSpanElement>(null)
+  const isGliderShown = useRef(false)
+  // Docked = the page has been scrolled a little: the bar glides to the top-right and stays there.
+  const [isDocked, setIsDocked] = useState(() => typeof window !== 'undefined' && window.scrollY > DOCK_ON)
+  const dockedRef = useRef(isDocked)
+  const tourRef = useRef<HTMLAnchorElement>(null)
 
   const activeGroup = useMemo(
     () => figmaNavGroups.find((group) => group.id === openGroupId) ?? null,
@@ -144,12 +163,109 @@ export function FigmaFunctionalNav({ isLoaded }: { isLoaded: boolean }) {
     const triggerBounds = trigger.getBoundingClientRect()
     const dropdownWidth = dropdownRef.current.offsetWidth
     const idealLeft = triggerBounds.left - navBounds.left
+
+    if (isDocked) {
+      // Docked at the right edge: slide the panel left as far as needed to keep it all on screen.
+      const viewportWidth = document.documentElement.clientWidth
+      const minLeft = DOCK_MARGIN - navBounds.left
+      const maxLeft = viewportWidth - DOCK_MARGIN - dropdownWidth - navBounds.left
+      setDropdownLeft(Math.min(Math.max(idealLeft, minLeft), maxLeft))
+      return
+    }
+
     const maxLeft = Math.max(0, navBounds.width - dropdownWidth)
     setDropdownLeft(Math.min(Math.max(0, idealLeft), maxLeft))
-  }, [openGroupId])
+  }, [openGroupId, isDocked])
+
+  // Dock after a little scrolling. Checked at most once per frame.
+  useEffect(() => {
+    let frame = 0
+
+    const update = () => {
+      frame = 0
+      const y = window.scrollY
+      const next = dockedRef.current ? y > DOCK_OFF : y > DOCK_ON
+      if (next === dockedRef.current) return
+
+      dockedRef.current = next
+      setIsDocked(next)
+      // An open dropdown would be left behind while the bar moves, so close it.
+      if (window.matchMedia(FULL_NAV_QUERY).matches) setOpenGroupId(null)
+    }
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update)
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  // How far the bar travels to reach the top-right corner. Written straight to CSS variables,
+  // so scrolling never re-renders the nav, and the move itself is a transform (smooth on the GPU).
+  useLayoutEffect(() => {
+    const layer = navRef.current
+    if (!layer) return
+
+    const measure = () => {
+      const tour = tourRef.current
+      const top = parseFloat(getComputedStyle(layer).top) || 0
+      // Right edge of the bar plus its Virtual Tour button, measured from the bar's left edge.
+      const groupRight = tour && tour.offsetWidth > 0 ? tour.offsetLeft + tour.offsetWidth : layer.offsetWidth
+      const dockX = document.documentElement.clientWidth / 2 - DOCK_MARGIN - groupRight + layer.offsetWidth / 2
+      layer.style.setProperty('--nav-dock-x', `${Math.round(dockX)}px`)
+      layer.style.setProperty('--nav-dock-y', `${Math.round(DOCK_TOP - top)}px`)
+    }
+
+    measure()
+    window.addEventListener('resize', measure)
+    // Fonts change the bar's width once they load.
+    void document.fonts?.ready.then(measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+
+  useLayoutEffect(() => {
+    const glider = gliderRef.current
+    if (!glider) return
+
+    const trigger = activeGroupId ? triggerRefs.current[activeGroupId] : null
+    if (!trigger) {
+      glider.dataset.visible = 'false'
+      isGliderShown.current = false
+      return
+    }
+
+    const place = () => {
+      glider.style.width = `${trigger.offsetWidth}px`
+      glider.style.transform = `translateX(${trigger.offsetLeft}px)`
+    }
+
+    if (isGliderShown.current) {
+      place()
+    } else {
+      // Appearing: jump straight to the item instead of sliding in from the last spot.
+      glider.style.transition = 'none'
+      place()
+      void glider.offsetWidth
+      glider.style.transition = ''
+    }
+
+    glider.dataset.visible = 'true'
+    isGliderShown.current = true
+
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
+  }, [activeGroupId])
 
   return (
-    <header ref={navRef} className={isLoaded ? 'figma-nav-layer is-loaded' : 'figma-nav-layer'} aria-label="Main navigation">
+    <header
+      ref={navRef}
+      className={['figma-nav-layer', isLoaded && 'is-loaded', isDocked && 'is-docked'].filter(Boolean).join(' ')}
+      aria-label="Main navigation"
+    >
       <div className="figma-nav__mobile-bar">
         <a href={pathname === '/' ? '#top' : '/'} className="figma-nav__mobile-brand" aria-label="WorkHall home">
           <img src={workhallOrange} alt="WorkHall" />
@@ -167,24 +283,39 @@ export function FigmaFunctionalNav({ isLoaded }: { isLoaded: boolean }) {
         </button>
       </div>
 
-      <nav className="figma-nav navbar" aria-label="Primary">
-        {figmaNavGroups.map((group) => (
-          <button
-            key={group.id}
-            type="button"
-            className={openGroupId === group.id ? 'figma-nav__item nav-pill is-open' : 'figma-nav__item nav-pill'}
-            aria-expanded={openGroupId === group.id}
-            ref={(node) => {
-              triggerRefs.current[group.id] = node
-            }}
-            onClick={() => setOpenGroupId((current) => (current === group.id ? null : group.id))}
-          >
-            <span>{group.visualLabel}</span>
-            <DownArrowBadge />
-          </button>
-        ))}
+      <nav className="figma-nav navbar" aria-label="Primary" onMouseLeave={() => setHoveredGroupId(null)}>
+        <span ref={gliderRef} className="figma-nav__glider" data-visible="false" aria-hidden="true" />
+        {figmaNavGroups.map((group) => {
+          const classes = ['figma-nav__item', 'nav-pill']
+          if (openGroupId === group.id) classes.push('is-open')
+          if (activeGroupId === group.id) classes.push('is-active')
+
+          return (
+            <button
+              key={group.id}
+              type="button"
+              className={classes.join(' ')}
+              aria-expanded={openGroupId === group.id}
+              ref={(node) => {
+                triggerRefs.current[group.id] = node
+              }}
+              onMouseEnter={() => setHoveredGroupId(group.id)}
+              onFocus={() => setHoveredGroupId(group.id)}
+              onBlur={() => setHoveredGroupId(null)}
+              onClick={() => setOpenGroupId((current) => (current === group.id ? null : group.id))}
+            >
+              <span>{group.visualLabel}</span>
+              <DownArrowBadge />
+            </button>
+          )
+        })}
       </nav>
-      <a href={resolveSiteHref('#virtual-tour', pathname)} className="figma-nav__tour virtual-tour-btn">
+      <a ref={tourRef} href={resolveSiteHref('#virtual-tour', pathname)} className="figma-nav__tour virtual-tour-btn">
+        <span className="figma-nav__tour-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M9 7.2v9.6a.6.6 0 0 0 .9.52l7.6-4.8a.6.6 0 0 0 0-1.04l-7.6-4.8A.6.6 0 0 0 9 7.2Z" />
+          </svg>
+        </span>
         Virtual Tour
       </a>
 

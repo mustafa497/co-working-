@@ -1,0 +1,16 @@
+/* Flying rotation text (skills/flying-rotation). */
+
+/* Words never break mid-word once split into letters. */
+.flying-text__word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Transforms need inline-block. The padding / negative-margin pair stops glyph edges
+   from clipping while they rotate, without changing the spacing. */
+.flying-text__char {
+  display: inline-block;
+  padding-inline: 0.06em;
+  margin-inline: -0.06em;
+  transform-origin: 50% 65%;
+}

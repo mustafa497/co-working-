@@ -9,27 +9,33 @@ const SCROLL_BUDGET = (4 - 1) * TRANSITION_MS
 const INDICATOR_SIZE = 16
 const DESKTOP_MEDIA_QUERY = '(min-width: 1025px)'
 
+const pad = (value: number) => String(value).padStart(2, '0')
+
 const steps = [
   {
     title: 'Meeting Rooms',
+    tag: 'By the hour or day',
     body: 'Bookable by the hour or day. Free for members, available to everyone',
     image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=85',
     imagePosition: 'center center',
   },
   {
     title: 'Studios',
+    tag: 'Production & recording',
     body: 'Fully equipped spaces for production, presentations, and recordings',
     image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85',
     imagePosition: 'center center',
   },
   {
     title: 'Weekend/Day Pass',
+    tag: 'Any day of the week',
     body: 'Full access to our shared spaces and all amenities any day of the week.',
     image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=85',
     imagePosition: 'center center',
   },
   {
     title: 'Virtual Office',
+    tag: 'Address & mail, no desk',
     body: 'Real business address, mail handling, meeting room access without a full-time desk',
     image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85',
     imagePosition: 'center center',
@@ -407,6 +413,10 @@ export default function PurposeHallsSection() {
                     onClick={isStaticLayout ? () => setCurrentStep(index) : undefined}
                   >
                     <div className="ph-clean-item-copy">
+                      <span className="ph-clean-item-meta">
+                        <span className="ph-clean-item-index">{pad(index + 1)}</span>
+                        <span className="ph-clean-item-tag">{step.tag}</span>
+                      </span>
                       <h3
                         ref={(node) => {
                           titleRefs.current[index] = node
@@ -427,14 +437,20 @@ export default function PurposeHallsSection() {
                   <div className="ph-clean-frame-layer is-active">
                     <img src={steps[currentStep].image} alt="" style={{ objectPosition: steps[currentStep].imagePosition }} />
                     <div className="ph-clean-frame-overlay" />
-                    <span>{steps[currentStep].title}</span>
+                    <span className="ph-clean-frame-caption">
+                      <b>{pad(currentStep + 1)} / {pad(steps.length)}</b>
+                      <i>{steps[currentStep].title}</i>
+                    </span>
                   </div>
                 ) : (
                   steps.map((step, index) => (
                     <div key={step.title} className={getSlideClassName(index)}>
                       <img src={step.image} alt="" style={{ objectPosition: step.imagePosition }} />
                       <div className="ph-clean-frame-overlay" />
-                      <span>{step.title}</span>
+                      <span className="ph-clean-frame-caption">
+                        <b>{pad(index + 1)} / {pad(steps.length)}</b>
+                        <i>{step.title}</i>
+                      </span>
                     </div>
                   ))
                 )}

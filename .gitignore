@@ -37,3 +37,6 @@ build
 *.njsproj
 *.sln
 *.sw?
+
+# Assistant tool notes (not part of the site)
+.omc/

@@ -1,0 +1,700 @@
+/*
+ * Figma alignment layer for the home page.
+ * Source: Figma "Work Hall and Work Town", Page 1 (hero frame).
+ * Loaded after App.css so these rules win at equal specificity.
+ */
+
+/* ---------- Hero: headline is all black in Figma ---------- */
+.figma-hero__headline-block h1 em,
+.orange-line .word-rise {
+  color: #15110d;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Keep the rise animation, drop the black-to-orange colour bleed. */
+  .hero-page.is-loaded .orange-line .word-rise {
+    animation: wordRise 760ms cubic-bezier(0.16, 1, 0.3, 1) 880ms both;
+  }
+}
+
+/* ---------- Hero: folding cards (src/components/FoldingCards) ---------- */
+.figma-hero__image-card {
+  /* The deck of cards peeks out underneath, so this must not clip. */
+  overflow: visible;
+  margin-left: 0;
+}
+
+/* Friends box comes before the location box, as in Figma. */
+.figma-search-card .booking-console--hero .booking-popover--seats {
+  order: -1;
+}
+
+/* ---------- Hero: stats live inside the headline card ---------- */
+.figma-hero__copy-card .figma-stats-card {
+  height: auto;
+  margin-top: auto;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.figma-hero__copy-card .figma-stat strong {
+  font-size: clamp(34px, 2.6vw, 48px);
+  font-weight: 500;
+}
+
+.figma-hero__copy-card .figma-stat > span {
+  font-size: clamp(12px, 0.85vw, 15px);
+}
+
+@media (min-width: 1025px) {
+  /* Logo sits at the far left, clear of the centred nav. */
+  .hero-brand-mark {
+    left: clamp(32px, 3.4vw, 64px);
+  }
+
+  .figma-hero {
+    grid-template-columns: minmax(0, 2.02fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  /* Copy card and photo are the same height; flat beige card. */
+  .figma-hero__copy-card {
+    height: calc(100vh - 18vh);
+    min-height: 600px;
+    background: #ece4d7;
+    justify-content: flex-start;
+  }
+
+  .figma-hero__image-card {
+    width: 100%;
+    height: calc(100vh - 18vh);
+    min-height: 600px;
+    aspect-ratio: auto;
+    margin-left: 0;
+  }
+
+  /* Booking bar sits right under the paragraph. */
+  .figma-hero__lede {
+    margin-bottom: 0;
+  }
+
+  .figma-search-card {
+    margin-top: clamp(20px, 3vh, 36px);
+  }
+
+  /* Stats: a left-aligned row at the bottom of the card. */
+  .figma-hero__copy-card .figma-stats-card {
+    justify-content: flex-start;
+    gap: clamp(48px, 5.6vw, 104px);
+    padding-left: clamp(8px, 1.4vw, 28px);
+  }
+
+  .figma-hero__copy-card .figma-stat {
+    gap: 4px;
+  }
+
+  /* Booking bar: three separate boxes, friends first, no shared track. */
+  .figma-search-card .booking-console--hero {
+    padding: 0;
+    background: none;
+    gap: 8px;
+  }
+
+  .figma-search-card .booking-console--hero .booking-fields {
+    display: flex;
+    gap: 8px;
+  }
+
+  .figma-search-card .booking-console--hero .booking-popover--seats {
+    order: -1;
+    margin-left: 0;
+  }
+
+  .figma-search-card .booking-console--hero .booking-field {
+    min-width: 210px;
+    height: 52px;
+    min-height: 52px;
+    border: 1px solid #15110d;
+    border-radius: 4px;
+    background: #fffdf9;
+    gap: 12px;
+  }
+
+  .figma-search-card .booking-console--hero .booking-field > span:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .figma-search-card .booking-console--hero .booking-field small {
+    display: block;
+    color: #857f78;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .figma-search-card .booking-console--hero .primary-cta {
+    height: 52px;
+    min-height: 52px;
+    border-radius: 4px;
+  }
+}
+
+/* ---------- Plans: intro heading (scrolls away, all black) ---------- */
+.plans-intro {
+  padding: clamp(24px, 4vh, 56px) 77px clamp(32px, 6vh, 72px);
+  background: #fcfaf6;
+}
+
+.plans-header__heading {
+  margin: 0;
+}
+
+.plans-intro .plans-header__heading > span,
+.plans-intro .plans-header__heading .is-accent,
+.plans-header--mobile .plans-header__heading .is-accent {
+  color: #15110d;
+  font-size: clamp(40px, 4.4vw, 68px);
+  line-height: 1.04;
+}
+
+.plans-intro__copy {
+  max-width: 640px;
+  margin: 18px 0 0;
+  color: #15110d;
+  font-family: var(--sans);
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.45;
+}
+
+/* ---------- Plans: group label + title ---------- */
+.plans-group__kicker {
+  margin: 0 0 14px;
+  padding: 0 8px;
+}
+
+.plans-group h3 {
+  font-size: clamp(72px, 6.6vw, 104px);
+  margin-bottom: 18px;
+}
+
+/* ---------- Plans: Figma cards (light card, wide photo, "Best Suited For") ---------- */
+.card--plans-glow {
+  background: #f4f2ef;
+  border: 1px solid rgba(34, 32, 19, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(60, 46, 30, 0.08);
+  padding: 8px 10px 16px;
+}
+
+.card--plans-glow .carousel {
+  aspect-ratio: 16 / 9.2;
+}
+
+.card--plans-glow .card__title {
+  font-size: clamp(2.2rem, 2.9vw, 2.9rem);
+}
+
+.card--plans-glow .card__cta {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.card--plans-glow .card__description {
+  max-width: none;
+  margin: 12px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.card__suited {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: auto;
+}
+
+.card__suited-label {
+  flex-shrink: 0;
+  color: var(--color-ink);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.card--plans-glow .card__tags {
+  margin: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 18px;
+  row-gap: 6px;
+  flex: 1;
+}
+
+.card--plans-glow .card__tag {
+  font-size: 12.5px;
+  line-height: 1.2;
+}
+
+@media (min-width: 1025px) {
+  /* Track starts near the top: the intro heading is no longer inside the sticky area. */
+  .plans-track-zone {
+    top: clamp(28px, 6vh, 64px);
+  }
+
+  .plans-group {
+    width: auto;
+  }
+
+  .cards-row {
+    height: auto;
+  }
+
+  .card-slot {
+    flex: 0 0 clamp(360px, 27.4vw, 430px);
+    width: clamp(360px, 27.4vw, 430px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .plans-intro {
+    display: none;
+  }
+
+  .plans-scroll-section--mobile .plans-header__heading > span,
+  .plans-scroll-section--mobile .plans-header__heading .is-accent {
+    color: #15110d;
+    font-size: clamp(32px, 8.6vw, 52px);
+    line-height: 1.06;
+  }
+
+  .plans-scroll-section--mobile .plans-header .plans-intro__copy {
+    color: #15110d;
+  }
+
+  .figma-hero__copy-card .figma-stats-card {
+    margin-top: 28px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .figma-hero__copy-card .figma-stats-card {
+    row-gap: 22px;
+  }
+}
+
+@media (min-width: 1025px) and (max-height: 820px) {
+  .figma-hero__copy-card,
+  .figma-hero__image-card {
+    height: calc(100vh - 19vh);
+    min-height: 480px;
+  }
+}
+
+/* =====================================================================
+ * Nav: maroon pill bar, cream sliding highlight, cream "Virtual Tour".
+ * ===================================================================== */
+:root {
+  --nav-maroon: #9d2b30;
+  --nav-maroon-deep: #7f1f24;
+  --nav-cream: #f8eee4;
+  --nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.figma-nav {
+  position: relative;
+  gap: 2px;
+  height: 62px;
+  padding: 7px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ab353b 0%, var(--nav-maroon) 48%, #8d2429 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 20px 44px -16px rgba(157, 43, 48, 0.6),
+    0 6px 14px -6px rgba(80, 18, 22, 0.32);
+}
+
+/* The cream pill that glides between items. */
+.figma-nav__glider {
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 0;
+  z-index: 0;
+  width: 0;
+  border-radius: 999px;
+  background: var(--nav-cream);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 8px 18px -8px rgba(50, 10, 14, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 480ms var(--nav-ease),
+    width 480ms var(--nav-ease),
+    opacity 220ms ease;
+}
+
+.figma-nav__glider[data-visible='true'] {
+  opacity: 1;
+}
+
+.figma-nav__item {
+  z-index: 1;
+  height: 48px;
+  padding: 0 10px 0 18px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--nav-cream);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  overflow: visible;
+  transition: color 320ms var(--nav-ease);
+}
+
+/* Retire the old orange wipe-fill. */
+.figma-nav__item::before {
+  content: none;
+}
+
+.figma-nav__item > span:first-child {
+  padding-right: 0;
+}
+
+.figma-nav__item:hover,
+.figma-nav__item.is-open,
+.figma-nav__item.is-active {
+  color: var(--nav-maroon);
+  transform: none;
+  box-shadow: none;
+}
+
+.figma-nav__item:focus-visible {
+  outline: 2px solid var(--nav-cream);
+  outline-offset: 2px;
+}
+
+.figma-nav__badge {
+  width: 24px;
+  height: 24px;
+  margin-left: 9px;
+  border-radius: 999px;
+  background: rgba(248, 238, 228, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(248, 238, 228, 0.16);
+  transition:
+    background 320ms var(--nav-ease),
+    box-shadow 320ms var(--nav-ease);
+}
+
+.figma-nav__badge svg {
+  width: 12px;
+  height: 12px;
+  stroke: var(--nav-cream);
+  stroke-width: 2.2;
+}
+
+.figma-nav__item:hover .figma-nav__badge,
+.figma-nav__item.is-active .figma-nav__badge,
+.figma-nav__item.is-open .figma-nav__badge {
+  background: var(--nav-maroon);
+  box-shadow: none;
+}
+
+/* Arrow nudges down on hover, flips up while the menu is open. */
+.figma-nav__item:hover .figma-nav__badge svg,
+.figma-nav__item.is-active .figma-nav__badge svg {
+  transform: translateY(1.5px);
+}
+
+.figma-nav__item.is-open .figma-nav__badge svg,
+.figma-nav__item.is-open:hover .figma-nav__badge svg {
+  transform: rotate(180deg);
+}
+
+/* Virtual Tour: cream pill with a maroon play button; fills maroon on hover. */
+.figma-nav__tour {
+  top: 7px;
+  right: auto;
+  left: calc(100% + 18px);
+  gap: 10px;
+  height: 48px;
+  min-width: 0;
+  padding: 0 22px 0 7px;
+  border: 1.5px solid var(--nav-maroon);
+  border-radius: 999px;
+  background: #fff8f1;
+  color: var(--nav-maroon);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 12px 26px -16px rgba(157, 43, 48, 0.7);
+  transition:
+    background 320ms var(--nav-ease),
+    color 320ms var(--nav-ease),
+    box-shadow 320ms var(--nav-ease);
+}
+
+.figma-nav__tour-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--nav-maroon);
+  color: var(--nav-cream);
+  transition:
+    background 320ms var(--nav-ease),
+    color 320ms var(--nav-ease),
+    transform 420ms var(--nav-ease);
+}
+
+.figma-nav__tour-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.figma-nav__tour:hover,
+.figma-nav__tour:focus-visible {
+  background: var(--nav-maroon);
+  color: var(--nav-cream);
+  box-shadow: 0 16px 30px -14px rgba(157, 43, 48, 0.75);
+}
+
+.figma-nav__tour:hover .figma-nav__tour-icon,
+.figma-nav__tour:focus-visible .figma-nav__tour-icon {
+  background: var(--nav-cream);
+  color: var(--nav-maroon);
+  transform: scale(1.06);
+}
+
+.figma-nav__tour:focus-visible {
+  outline: 2px solid var(--nav-maroon);
+  outline-offset: 3px;
+}
+
+/* Dropdown panel: swap the orange accents for maroon. */
+.figma-nav__dropdown {
+  border-color: rgba(157, 43, 48, 0.18);
+  background:
+    radial-gradient(rgba(157, 43, 48, 0.07) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 250, 244, 0.98), rgba(243, 230, 214, 0.98));
+  background-size: 13px 13px, auto;
+  box-shadow: 0 26px 76px rgba(80, 22, 26, 0.24);
+}
+
+.figma-nav__rail {
+  border-left-color: rgba(157, 43, 48, 0.16);
+}
+
+.figma-feature-card {
+  border-color: rgba(157, 43, 48, 0.14);
+}
+
+.figma-feature-card::after {
+  background:
+    linear-gradient(120deg, rgba(255, 250, 240, 0.82) 0 36%, rgba(255, 250, 240, 0.18) 58%, rgba(255, 250, 240, 0.72)),
+    radial-gradient(circle at 18% 14%, rgba(157, 43, 48, 0.14), transparent 9rem);
+}
+
+.figma-feature-card:hover {
+  border-color: rgba(157, 43, 48, 0.3);
+  box-shadow: 0 16px 36px rgba(80, 22, 26, 0.14);
+}
+
+.figma-feature-card__top .nav-glyph,
+.figma-feature-card__top em {
+  color: var(--nav-maroon);
+}
+
+.figma-feature-card:hover .figma-feature-card__arrow {
+  color: var(--nav-maroon);
+}
+
+/* Narrower desktops (1281–1440px): slightly tighter bar. */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .figma-nav {
+    height: 58px;
+    padding: 6px;
+  }
+
+  .figma-nav__glider {
+    top: 6px;
+    bottom: 6px;
+  }
+
+  .figma-nav__item {
+    height: 46px;
+    padding: 0 8px 0 15px;
+    font-size: 14px;
+  }
+
+  .figma-nav__badge {
+    width: 22px;
+    height: 22px;
+    margin-left: 7px;
+  }
+
+  .figma-nav__tour {
+    top: 6px;
+    height: 46px;
+    font-size: 14px;
+  }
+
+  .figma-nav__tour-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Compact bar and phone menu (up to 1280px): maroon accents. */
+@media (max-width: 1280px) {
+  .figma-nav__mobile-toggle,
+  .figma-nav__mobile-tour {
+    background: var(--nav-maroon);
+    box-shadow: 0 10px 22px -12px rgba(157, 43, 48, 0.7);
+  }
+
+  .figma-nav__mobile-item .figma-nav__badge {
+    margin-left: 0;
+    background: var(--nav-maroon);
+    box-shadow: none;
+  }
+
+  .figma-nav__mobile-item.is-open {
+    color: var(--nav-maroon);
+    box-shadow: inset 0 0 0 1.5px var(--nav-maroon);
+  }
+
+  .figma-nav__mobile-item.is-open .figma-nav__badge svg {
+    transform: rotate(180deg);
+  }
+}
+
+/* =====================================================================
+ * Compact nav bar (screens up to 1280px wide): space between the bar and the hero.
+ * The square logo used to set the bar's height (up to 131px), so the bar ran over the top
+ * of the hero cards. A smaller logo makes it a slim strip, and each layout's top padding
+ * keeps a clear gap under it: padding = bar top + bar height + gap.
+ * ===================================================================== */
+@media (max-width: 1280px) {
+  .figma-nav__mobile-bar {
+    min-height: 0;
+    padding: 8px 12px 8px 18px;
+  }
+
+  .figma-nav__mobile-brand {
+    width: clamp(50px, 5vw, 56px);
+  }
+}
+
+/* Laptops and small desktops: bar top is clamp(18px, 2.4vw, 26px), bar is about 72px. */
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .figma-hero {
+    padding-top: calc(clamp(18px, 2.4vw, 26px) + 72px + 28px);
+  }
+}
+
+/* Tablets: bar top is clamp(18px, 3vw, 28px). */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .figma-hero {
+    padding-top: calc(clamp(18px, 3vw, 28px) + 72px + 28px);
+  }
+}
+
+/* Phones: bar top is 18px and the bar is about 66px tall. */
+@media (max-width: 640px) {
+  .figma-hero {
+    padding-top: calc(18px + 66px + 28px);
+  }
+}
+
+/* =====================================================================
+ * Docking nav: scroll down and the bar glides to the top-right and stays on screen.
+ * FigmaFunctionalNav adds .is-docked after a little scrolling, and measures how far the bar
+ * has to travel into --nav-dock-x / --nav-dock-y. Only transform animates, so it stays smooth.
+ * ===================================================================== */
+.figma-nav-layer {
+  /* Fixed instead of absolute, so the bar stays on screen while the page scrolls. */
+  position: fixed;
+  transform: translate3d(-50%, 0, 0);
+  transition: transform 780ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Full bar (from 1281px wide): it glides to the top-right corner, Virtual Tour included. */
+@media (min-width: 1281px) {
+  .figma-nav-layer.is-docked {
+    transform: translate3d(calc(-50% + var(--nav-dock-x, 0px)), var(--nav-dock-y, 0px), 0);
+  }
+
+  .figma-nav {
+    transition: box-shadow 600ms var(--nav-ease);
+  }
+
+  /* Floating over the page: a deeper shadow lifts the bar off the content. */
+  .figma-nav-layer.is-docked .figma-nav {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+      0 26px 50px -14px rgba(80, 18, 22, 0.62),
+      0 8px 18px -8px rgba(80, 18, 22, 0.4);
+  }
+}
+
+/* Compact bar (up to 1280px wide): the strip dissolves and only the menu button stays,
+   floating at the top-right, so it never covers the page with an empty bar. */
+@media (max-width: 1280px) {
+  .figma-nav__mobile-bar {
+    transition:
+      background-color 500ms var(--nav-ease),
+      box-shadow 500ms var(--nav-ease);
+  }
+
+  .figma-nav__mobile-brand {
+    transition:
+      opacity 400ms ease,
+      transform 600ms var(--nav-ease);
+  }
+
+  .figma-nav-layer.is-docked .figma-nav__mobile-bar {
+    background-color: rgba(248, 240, 227, 0);
+    box-shadow: none;
+    backdrop-filter: none;
+    pointer-events: none;
+  }
+
+  .figma-nav-layer.is-docked .figma-nav__mobile-brand {
+    opacity: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+  }
+
+  .figma-nav-layer.is-docked .figma-nav__mobile-toggle {
+    pointer-events: auto;
+    box-shadow: 0 16px 30px -12px rgba(157, 43, 48, 0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figma-nav-layer,
+  .figma-nav,
+  .figma-nav__mobile-bar,
+  .figma-nav__mobile-brand {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figma-nav__glider,
+  .figma-nav__item,
+  .figma-nav__badge svg,
+  .figma-nav__tour,
+  .figma-nav__tour-icon {
+    transition: none;
+  }
+}

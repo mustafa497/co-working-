@@ -1,0 +1,417 @@
+/*
+ * Folding cards: photos shown one by one, each top half folding down like a flip-calendar page.
+ * --fold-ms  how long one fold takes   (keep in sync with FOLD_MS in FoldingCards.tsx)
+ * --hold-ms  how long a card stays up (the progress bar fills over this time, then the next fold starts)
+ */
+.fold {
+  --fold-ms: 1100ms;
+  --hold-ms: 3800ms;
+  --fold-ease: cubic-bezier(0.6, 0.04, 0.26, 1);
+  /* The hero card's corner radius, so the inner line follows it. */
+  --fold-radius: 48px;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* -- The deck: two more cards peeking out under the top card -- */
+.fold__deck {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(21, 17, 13, 0.16);
+  border-radius: inherit;
+  transform-origin: 50% 0;
+}
+
+.fold__deck--near {
+  background: #e6dccb;
+  transform: translateY(10px) scaleX(0.95);
+}
+
+.fold__deck--far {
+  background: #d8cab4;
+  transform: translateY(20px) scaleX(0.9);
+}
+
+/* -- The card -- */
+.fold__clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #e7dccd;
+  box-shadow: 0 30px 60px -34px rgba(40, 25, 15, 0.5);
+}
+
+/* Soft top and bottom shading so the progress bars and the counter always read. */
+.fold__clip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(20, 14, 10, 0.3) 0, rgba(20, 14, 10, 0) 22%),
+    linear-gradient(0deg, rgba(20, 14, 10, 0.5) 0, rgba(20, 14, 10, 0) 30%);
+}
+
+/* A fine light line inside the edge, like the other cards on the page. */
+.fold__clip::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  z-index: 5;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: calc(var(--fold-radius, 40px) - 8px);
+}
+
+.fold__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  perspective: 1800px;
+  perspective-origin: 50% 50%;
+}
+
+/* A half of one photo. The photo is sized to the whole card and cropped to its half. */
+.fold__half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: #e7dccd;
+}
+
+.fold__half--top {
+  top: 0;
+}
+
+.fold__half--bottom {
+  bottom: 0;
+}
+
+.fold__img {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.fold__half--top .fold__img {
+  top: 0;
+}
+
+.fold__half--bottom .fold__img {
+  top: -100%;
+}
+
+/* Darkens a half while a fold passes over it. */
+.fold__shade {
+  position: absolute;
+  inset: 0;
+  background: #140e0a;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fold__static {
+  z-index: 1;
+}
+
+/* -- The flap: the current card's top half, hinged on the middle crease -- */
+.fold__flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  z-index: 2;
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.fold__flap .fold__face {
+  top: 0;
+  bottom: auto;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* The back of the flap is the next card's bottom half, turned over so it reads upright once folded. */
+.fold__face--back {
+  transform: rotateX(180deg);
+}
+
+/* The crease across the middle of every card. */
+.fold__crease {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  height: 2px;
+  margin-top: -1px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0 1px, rgba(255, 255, 255, 0.38) 1px 2px);
+}
+
+/* -- The fold itself -- */
+.fold.is-folding .fold__flap {
+  animation: fold-flap var(--fold-ms) var(--fold-ease) forwards;
+}
+
+.fold.is-folding .fold__face--front .fold__shade {
+  animation: fold-shade-front var(--fold-ms) ease-in-out forwards;
+}
+
+.fold.is-folding .fold__face--back .fold__shade {
+  animation: fold-shade-back var(--fold-ms) ease-in-out forwards;
+}
+
+.fold.is-folding .fold__static--top .fold__shade {
+  animation: fold-shade-uncover var(--fold-ms) ease-in-out forwards;
+}
+
+.fold.is-folding .fold__static--bottom .fold__shade {
+  animation: fold-shade-land var(--fold-ms) ease-in-out forwards;
+}
+
+@keyframes fold-flap {
+  from {
+    transform: rotateX(0deg);
+  }
+
+  to {
+    transform: rotateX(-180deg);
+  }
+}
+
+/* The flap darkens as it tips over its edge, then its back catches the light. */
+@keyframes fold-shade-front {
+  0% {
+    opacity: 0;
+  }
+
+  50%,
+  100% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes fold-shade-back {
+  0%,
+  50% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The photo being uncovered starts in the flap's shadow and brightens. */
+@keyframes fold-shade-uncover {
+  0% {
+    opacity: 0.5;
+  }
+
+  65%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The photo being covered darkens as the flap comes down on it. */
+@keyframes fold-shade-land {
+  0%,
+  40% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* -- Progress bars: one per card; the active one fills while the card is up -- */
+.fold__bars {
+  position: absolute;
+  top: 24px;
+  left: 26px;
+  right: 26px;
+  z-index: 6;
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.fold__bar {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.fold__bar[data-state="done"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+}
+
+.fold__bar-fill {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: fold-progress var(--hold-ms) linear forwards;
+}
+
+@keyframes fold-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The card stays up while the pointer rests on it, or the hero is off screen. */
+.fold.is-paused .fold__bar-fill {
+  animation-play-state: paused;
+}
+
+/* While folding, the bar of the card that is leaving stays full. */
+.fold.is-folding .fold__bar-fill,
+.fold.is-reduced .fold__bar-fill {
+  animation: none;
+  transform: scaleX(1);
+}
+
+/* -- Counter and manual next button -- */
+.fold__count {
+  position: absolute;
+  left: 28px;
+  bottom: 28px;
+  z-index: 6;
+  margin: 0;
+  padding: 8px 11px;
+  color: #ffffff;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+  background: rgba(20, 14, 10, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+.fold__next {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f8eee4;
+  color: #15110d;
+  cursor: pointer;
+  box-shadow: 0 12px 24px -12px rgba(20, 14, 10, 0.6);
+  transition:
+    transform 300ms var(--fold-ease),
+    background 300ms ease,
+    color 300ms ease;
+}
+
+.fold__next svg {
+  width: 20px;
+  height: 20px;
+}
+
+.fold__next:hover {
+  transform: translateX(2px) scale(1.06);
+  background: #9d2b30;
+  color: #f8eee4;
+}
+
+.fold__next:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+/* Describes the current photo for screen readers. */
+.fold__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  white-space: nowrap;
+  clip: rect(0 0 0 0);
+}
+
+/* -- Tablets and phones: no deck under the card, tighter controls -- */
+@media (max-width: 1024px) {
+  .fold {
+    --fold-radius: 32px;
+  }
+
+  .fold__deck {
+    display: none;
+  }
+
+  .fold__bars {
+    top: 18px;
+    left: 20px;
+    right: 20px;
+  }
+
+  .fold__count {
+    left: 20px;
+    bottom: 20px;
+  }
+
+  .fold__next {
+    right: 20px;
+    bottom: 20px;
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (min-width: 1025px) and (max-height: 820px) {
+  .fold {
+    --fold-radius: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .fold {
+    --fold-radius: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold.is-folding .fold__flap,
+  .fold.is-folding .fold__shade {
+    animation: none;
+  }
+
+  .fold__next {
+    transition: none;
+  }
+}

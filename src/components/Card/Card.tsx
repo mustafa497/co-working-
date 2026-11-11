@@ -48,13 +48,16 @@ function Card({
 
       <p className="card__description">{description}</p>
 
-      <ul className="card__tags">
-        {tags.map((tag) => (
-          <li key={tag} className="card__tag">
-            {tag}
-          </li>
-        ))}
-      </ul>
+      <div className="card__suited">
+        <span className="card__suited-label">Best Suited For:</span>
+        <ul className="card__tags">
+          {tags.map((tag) => (
+            <li key={tag} className="card__tag">
+              {tag}
+            </li>
+          ))}
+        </ul>
+      </div>
     </article>
   );
 }

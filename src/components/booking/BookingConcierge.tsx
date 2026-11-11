@@ -23,6 +23,8 @@ interface BookingConciergeProps {
   fixedLocation?: string
   ctaClassName?: string
   ctaLabel?: string
+  seatsLabel?: string
+  submitLabel?: string
 }
 
 export function BookingConcierge({
@@ -30,6 +32,8 @@ export function BookingConcierge({
   fixedLocation,
   ctaClassName,
   ctaLabel = 'Book now',
+  seatsLabel = 'How Many Seats?',
+  submitLabel = 'Book My Tour',
 }: BookingConciergeProps) {
   const conciergeRef = useRef<HTMLDivElement>(null)
   const [openPanel, setOpenPanel] = useState<BookingPanel | null>(null)
@@ -131,7 +135,7 @@ export function BookingConcierge({
           <div className="booking-popover booking-popover--seats">
             <button type="button" className="booking-field booking-field--seats" aria-expanded={openPanel === 'seats'} onClick={() => togglePanel('seats')}>
               <span>
-                <strong>How Many Seats?</strong>
+                <strong>{seatsLabel}</strong>
                 <small>{seats ? (seats === 1 ? 'Solo workspace' : `${seats} people`) : 'Choose team size'}</small>
               </span>
               <span className="seat-stepper" aria-hidden="true">{String(seats ?? 3).padStart(2, '0')}</span>
@@ -181,7 +185,7 @@ export function BookingConcierge({
               setIsEnquiryOpen(true)
             }}
           >
-            Book My Tour
+            {submitLabel}
             <ArrowIcon />
           </button>
           {variant !== 'hero' && <a href="#locations" className="ghost-cta">Explore Locations</a>}

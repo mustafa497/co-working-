@@ -1,259 +1,252 @@
 import React, { useEffect, useRef, useState } from "react";
 import ScrollVelocity from "./ScrollVelocity";
+import { AmenityScene, type SceneName } from "./AmenityScenes";
 import "./AmenitiesMarquee.css";
 import {
-  ShieldCheck,
-  HandHelping,
-  LayoutTemplate,
-  Sparkles,
+  CalendarDays,
+  CarFront,
   Clock3,
+  Heart,
+  House,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Users,
+  Wifi,
+  Zap,
 } from "lucide-react";
 
-interface AmenityCardProps {
-  index: number;
-  name: string;
-  kicker: string;
-  heading1: string;
-  heading: string;
-  bg: string;
-  iconBg: string;
-  icon: React.ReactNode;
-  body: string;
+type Tone = "magenta" | "green" | "blue" | "orange";
+interface CardArt {
+  /** CSS background for the card: a soft gradient, or a hard two-tone split. */
+  background: string;
+  /** The workspace illustration drawn on the card. */
+  scene: SceneName;
+  /** Loose white dots: [x %, y %, size px]. */
+  dots: Array<[number, number, number]>;
 }
 
-const amenities = [
+interface Amenity {
+  tag: string;
+  title: string;
+  body: string;
+  tone: Tone;
+  Icon: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+  art: CardArt;
+}
+
+// Back face colours (brand): card background, then the darker icon tile.
+const tones: Record<Tone, { bg: string; tile: string }> = {
+  magenta: { bg: "#B24C8B", tile: "#8E3570" },
+  green: { bg: "#296549", tile: "#1D4733" },
+  blue: { bg: "#3F5FAA", tile: "#2C4277" },
+  orange: { bg: "#C8562C", tile: "#A2421F" },
+};
+
+const split = (band: string, rest: string, at = 54) =>
+  `linear-gradient(90deg, ${band} 0 ${at}%, ${rest} ${at}% 100%)`;
+
+// Amenity names follow Figma. The one-line descriptions are draft copy: confirm them with WorkHall.
+const amenities: Amenity[] = [
   {
-    name: "Open 24/7\n365 Days",
-    kicker: "Always open when work spills over",
-    heading1: "Open 24/7, 365 Days\nWith Full Access",
-    heading: "Free Gated Parking At All Locations",
-    bg: "#D26D45",
-
-    iconBg: "#D26D45",
-    body: "Early starts, late decks, weekend catch-ups, and off-pattern schedules still land in a room that is already ready.",
-    icon: <ShieldCheck size={25} color="#FFFFFF" />,
-  },
-
-  {
-    name: "Free Gated\nParking",
-    kicker: "Arrival, handled",
-    heading1: "Free Gated Parking\nAt All Locations",
-    heading: "Open 24/7, 365 Days With Full Access",
-    bg: "#E0A5CF",
-
-    iconBg: "#7D3561",
-    body: "No circling the block before the workday starts. Drive in, lock up, and move straight into the room.",
-    icon: <Clock3 size={25} color="#FFFFFF" />,
-  },
-  {
-    name: "Staff Service\nAt Your Desk",
-    kicker: "Quiet help, without the interruption",
-    heading1: "Staff Service\nAt Your Desk",
-    heading: "Custom Office Layouts",
-    bg: "#458E71",
-
-    iconBg: "#1D4733",
-    body: "The small operational asks do not have to break concentration. Support can reach you where you are already working.",
-    icon: <LayoutTemplate size={25} color="#FFFFFF" />,
-  },
-  {
-    name: "Custom Office\nLayouts",
-    kicker: "Built around how you work",
-    heading1: "Custom Office\nLayouts",
-    heading: "Staff Service At Your Desk",
-    bg: "#516AA9",
-
-    iconBg: "#2C4277",
-    body: "Rooms can be shaped around the team, storage, privacy level, and the tempo of the work itself.",
-    icon: <HandHelping size={25} color="#FFFFFF" />,
+    tag: "Open 24/7",
+    title: "Open 24/7, 365 Days\nWith Full Access",
+    body: "Early starts, late finishes, weekends: your access works every hour of every day.",
+    tone: "magenta",
+    Icon: Clock3,
+    art: {
+      background: "linear-gradient(180deg, #a3d3f0 0%, #cfe6dc 52%, #f7f0a8 100%)",
+      scene: "clock",
+      dots: [[18, 47, 16], [44, 32, 8], [80, 70, 6]],
+    },
   },
   {
-    name: "Car & Bike\nCleaning",
-    kicker: "One less errand",
-    heading1: "Car & Bike Cleaning\nOn Site",
-    heading: "Car & Bike Cleaning On Site",
-    bg: "#DBB154",
-
-    iconBg: "#8C6A1D",
-    body: "One more errand stays off the to-do list while the workday keeps moving.",
-    icon: <Sparkles size={25} color="#FFFFFF" />,
+    tag: "Desk Service",
+    title: "Service Staff At Your\nOwn Desks",
+    body: "Coffee, printing and small asks come to you, so your focus stays where it is.",
+    tone: "green",
+    Icon: Users,
+    art: {
+      background: "linear-gradient(160deg, #f2ae9c 0%, #f8d2c5 100%)",
+      scene: "coffee",
+      dots: [[78, 22, 12], [70, 76, 8]],
+    },
   },
-
   {
-    name: "Car & Bike\nCleaning",
-    kicker: "One less errand",
-    heading1: "Car & Bike Cleaning\nOn Site",
-    heading: "Free Gated Parking At All Locations",
-    bg: "#DBB154",
-
-    iconBg: "#8C6A1D",
-    body: "One more errand stays off the to-do list while the workday keeps moving.",
-    icon: <ShieldCheck size={25} color="#FFFFFF" />,
+    tag: "Custom Layouts",
+    title: "Custom Office Or\nDesk Layouts",
+    body: "Desks, storage and privacy arranged around how your team actually works.",
+    tone: "blue",
+    Icon: Star,
+    art: {
+      background: split("#e3ae56", "#f7e5c4"),
+      scene: "desk",
+      dots: [[36, 26, 18], [28, 46, 14], [88, 90, 12]],
+    },
   },
-
   {
-    name: "Car & Bike\nCleaning",
-    kicker: "One less errand",
-    heading1: "Car & Bike Cleaning\nOn Site",
-    heading: "Open 24/7, 365 Days With Full Access",
-    bg: "#458E71",
-
-    iconBg: "#1D4733",
-    body: "One more errand stays off the to-do list while the workday keeps moving.",
-    icon: <Clock3 size={25} color="#FFFFFF" />,
+    tag: "EV Charging",
+    title: "EV Charging Stations\nFor All Wheelers",
+    body: "Charge your car, bike or scooter while you work.",
+    tone: "orange",
+    Icon: Zap,
+    art: {
+      background: "linear-gradient(150deg, #e8603e 0%, #f2a48c 48%, #f8cdbd 100%)",
+      scene: "charger",
+      dots: [[86, 52, 16]],
+    },
   },
-
   {
-    name: "Car & Bike\nCleaning",
-    kicker: "One less errand",
-    heading1: "Car & Bike Cleaning\nOn Site",
-    heading: "Custom Office Layouts",
-    bg: "#516AA9",
-
-    iconBg: "#2C4277",
-    body: "One more errand stays off the to-do list while the workday keeps moving.",
-    icon: <LayoutTemplate size={25} color="#FFFFFF" />,
+    tag: "Green Spaces",
+    title: "Real Green\nSpaces",
+    body: "Living plants and open-air corners to reset between tasks.",
+    tone: "magenta",
+    Icon: House,
+    art: {
+      background: split("#a3c3a1", "#f1e8d5", 58),
+      scene: "plant",
+      dots: [[20, 18, 14], [26, 62, 18], [84, 6, 10]],
+    },
   },
-
   {
-    name: "Car & Bike\nCleaning",
-    kicker: "One less errand",
-    heading1: "Car & Bike Cleaning\nOn Site",
-    heading: "Staff Service At Your Desk",
-    bg: "#E0A5CF",
-
-    iconBg: "#7D3561",
-    body: "One more errand stays off the to-do list while the workday keeps moving.",
-    icon: <HandHelping size={25} color="#FFFFFF" />,
+    tag: "Free Parking",
+    title: "Free Gated Parking\nAt Every Location",
+    body: "Secure, gated parking on site at no extra cost.",
+    tone: "orange",
+    Icon: CarFront,
+    art: {
+      background: split("#c8577a", "#f7c9bd", 38),
+      scene: "car",
+      dots: [[70, 24, 10], [24, 34, 8]],
+    },
   },
-
   {
-    name: "Car & Bike\nCleaning",
-    kicker: "One less errand",
-    heading1: "Car & Bike Cleaning\nOn Site",
-    heading: "Car & Bike Cleaning On Site",
-    bg: "#D26D45",
-
-    iconBg: "#D26D45",
-    body: "One more errand stays off the to-do list while the workday keeps moving.",
-    icon: <Sparkles size={25} color="#FFFFFF" />,
+    tag: "Car & Bike Wash",
+    title: "On-Site Car and Bike\nCleaning",
+    body: "Your vehicle gets cleaned while you are at your desk.",
+    tone: "green",
+    Icon: Sparkles,
+    art: {
+      background: "linear-gradient(170deg, #8f90e0 0%, #b7a6e6 50%, #e3c3e8 100%)",
+      scene: "bike",
+      dots: [[16, 72, 14], [30, 86, 8], [86, 82, 10]],
+    },
+  },
+  {
+    tag: "Pet Friendly",
+    title: "Permission To Bring\nYour Pets",
+    body: "Pet-friendly spaces, so nobody has to wait at home.",
+    tone: "blue",
+    Icon: Heart,
+    art: {
+      background: "linear-gradient(180deg, #70d0c0 0%, #b9e4cf 55%, #eef2d6 100%)",
+      scene: "paw",
+      dots: [[22, 22, 14], [76, 30, 9], [64, 84, 12]],
+    },
+  },
+  {
+    tag: "Quiet & Secure",
+    title: "Quiet and Secure\nPeaceful Environment",
+    body: "Controlled access and calm floors built for deep focus.",
+    tone: "orange",
+    Icon: ShieldCheck,
+    art: {
+      background: "linear-gradient(165deg, #ece4d3 0%, #dccfb8 100%)",
+      scene: "lock",
+      dots: [[82, 18, 10], [80, 78, 16]],
+    },
+  },
+  {
+    tag: "Indoor & Outdoor Dining",
+    title: "Indoor & Outdoor\nDining Spaces",
+    body: "Eat in, or take lunch outside, without leaving the building.",
+    tone: "magenta",
+    Icon: MapPin,
+    art: {
+      background: "linear-gradient(155deg, #f6dc8a 0%, #f4c3a0 100%)",
+      scene: "plate",
+      dots: [[20, 24, 12], [86, 26, 8], [30, 84, 14]],
+    },
+  },
+  {
+    tag: "Member Events",
+    title: "Member-Only Events\n& Workshops",
+    body: "Talks, workshops and meetups for the WorkHall community.",
+    tone: "green",
+    Icon: CalendarDays,
+    art: {
+      background: split("#5f7fd8", "#c7d3f4", 46),
+      scene: "calendar",
+      dots: [[78, 20, 14], [22, 78, 10]],
+    },
+  },
+  {
+    tag: "Wi-Fi & Backup Power",
+    title: "High-Speed Internet\n& Backup Power",
+    body: "Fast internet with backup power, so load-shedding never stops your day.",
+    tone: "blue",
+    Icon: Wifi,
+    art: {
+      background: "linear-gradient(175deg, #b8d8bf 0%, #e9eed9 100%)",
+      scene: "wifi",
+      dots: [[24, 30, 16], [32, 50, 8], [84, 22, 10]],
+    },
   },
 ];
 
-// const backgrounds: Record<string, string> = {
-//   "#D26C46": "#B85A38",
-//   "#E0A5CF": "#C984B5",
-//   "#458E71": "#38775E",
-//   "#516AA9": "#415A94",
-//   "#DBB154": "#C89A2E",
-// };
+// Columns that fill the whole strip height with no gaps: stacked pairs, and tall single cards.
+// `grow` sets each card's share of the column height.
+type Column = { cards: Array<{ index: number; grow: number }> };
 
-const backgrounds: Record<string, string> = {
-  "#D26D45": "#D26D45",
-  "#E0A5CF": "#B24C8B",
-  "#458E71": "#296549",
-  "#516AA9": "#3F5FAA",
-  "#DBB154": "#C8972A",
-};
+const columns: Column[] = [
+  { cards: [{ index: 0, grow: 5 }, { index: 1, grow: 6 }] },
+  { cards: [{ index: 2, grow: 1 }] },
+  { cards: [{ index: 3, grow: 1 }] },
+  { cards: [{ index: 4, grow: 6 }, { index: 5, grow: 5 }] },
+  { cards: [{ index: 6, grow: 5 }, { index: 7, grow: 6 }] },
+  { cards: [{ index: 8, grow: 1 }] },
+  { cards: [{ index: 9, grow: 1 }] },
+  { cards: [{ index: 10, grow: 6 }, { index: 11, grow: 5 }] },
+];
 
-const AmenityCard: React.FC<
-  AmenityCardProps & {
-    isTouchMode: boolean;
-    isFlipped: boolean;
-    onToggle: () => void;
-  }
-> = ({
-  kicker,
-  heading1,
-  heading,
-  bg,
-  iconBg,
-  body,
-  icon,
-  isTouchMode,
-  isFlipped,
-  onToggle,
-}) => {
+const AmenityArtCard: React.FC<{ amenity: Amenity; grow: number }> = ({ amenity, grow }) => {
+  const { tag, title, body, tone, Icon, art } = amenity;
+  const { bg, tile } = tones[tone];
+
   return (
-    <div
-      className={
-        isFlipped ? "amenity-flip-wrapper is-flipped" : "amenity-flip-wrapper"
-      }
-      onClick={isTouchMode ? onToggle : undefined}
-      role={isTouchMode ? "button" : undefined}
-      aria-pressed={isTouchMode ? isFlipped : undefined}
-      tabIndex={isTouchMode ? 0 : -1}
-      onKeyDown={
-        isTouchMode
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onToggle();
-              }
-            }
-          : undefined
-      }
-    >
-      <div className="amenity-flip-inner">
-        <div
-          className="amenity-card-front"
-          style={
-            {
-              // background: cardGradients[index % cardGradients.length],
-              background: backgrounds[bg],
-              border: `1px solid ${backgrounds[bg]}66`,
-              boxShadow: `inset 0 1px 0 ${backgrounds[bg]}99`,
-
-              "--amenity-accent": bg,
-              "--amenity-glow-a": `${bg}40`,
-              "--amenity-glow-b": `${bg}25`,
-              "--amenity-glow-c": `${bg}cc`,
-            } as React.CSSProperties
-          }
-        >
-          {/* <span className="amenity-card-name">{name}</span> */}
-
-          <div
-            className="amenity-empty-box"
-            style={{
-              background: iconBg,
-            }}
-          >
-            {icon}
-          </div>
-          <span className="amenity-back-heading">{heading}</span>
+    <article className="amenity-art-card" style={{ flexGrow: grow }} tabIndex={0}>
+      <div className="amenity-art-card__inner">
+        <div className="amenity-art-card__face amenity-art" style={{ background: art.background }} aria-hidden="true">
+          {art.dots.map(([x, y, size], dotIndex) => (
+            <span
+              key={dotIndex}
+              className="amenity-art__dot"
+              style={{ left: `${x}%`, top: `${y}%`, width: size, height: size }}
+            />
+          ))}
+          <AmenityScene name={art.scene} />
+          <span className="amenity-art__grain" />
+          <span className="amenity-art__tag">{tag}</span>
         </div>
 
-        <div
-          className="amenity-card-back"
-          style={
-            {
-              // background: bg,
-              // border: `1px solid ${bg}66`,
-              // boxShadow: `inset 0 1px 0 ${bg}99`,
-
-              // background: backgrounds[bg][index % backgrounds[bg].length],
-              background: backgrounds[bg],
-            } as React.CSSProperties
-          }
-        >
-          <span className="amenity-back-kicker">{kicker}</span>
-          {/* <div className="amenity-empty-box"></div> */}
-          {/* <span className="amenity-back-heading">{heading}</span> */}
-
-          <span className="amenity-back-heading">{heading1}</span>
-          <span className="amenity-back-body">{body}</span>
+        <div className="amenity-art-card__face amenity-art-card__back" style={{ background: bg }}>
+          <span className="amenity-art-card__icon" style={{ background: tile }} aria-hidden="true">
+            <Icon size={22} color="#FFFFFF" strokeWidth={2.1} />
+          </span>
+          <h3 className="amenity-art-card__title">{title}</h3>
+          <p className="amenity-art-card__body">{body}</p>
+          <span className="amenity-art__grain amenity-art__grain--soft" aria-hidden="true" />
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 
 const AmenitiesMarquee: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [isInView, setIsInView] = useState(true);
-  const [isTouchMode, setIsTouchMode] = useState(false);
-  const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const node = sectionRef.current;
@@ -268,75 +261,31 @@ const AmenitiesMarquee: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const mediaQuery = window.matchMedia("(hover: none), (pointer: coarse)");
-    const updateTouchMode = () => {
-      setIsTouchMode(mediaQuery.matches);
-      if (!mediaQuery.matches) {
-        setFlippedCardId(null);
-      }
-    };
-
-    updateTouchMode();
-    mediaQuery.addEventListener("change", updateTouchMode);
-
-    return () => mediaQuery.removeEventListener("change", updateTouchMode);
-  }, []);
-
-  useEffect(() => {
-    if (!isTouchMode) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target?.closest(".amenity-flip-wrapper")) {
-        setFlippedCardId(null);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [isTouchMode]);
-
-  const renderCard = (
-    card: (typeof amenities)[number],
-    index: number,
-    rowKey: string,
-  ) => {
-    const cardId = `${rowKey}-${index}-${card.heading}`;
-
-    return (
-      <AmenityCard
-        key={cardId}
-        index={index}
-        isTouchMode={isTouchMode}
-        isFlipped={flippedCardId === cardId}
-        onToggle={() =>
-          setFlippedCardId((current) => (current === cardId ? null : cardId))
-        }
-        {...card}
-      />
-    );
-  };
-
-  const row1 = amenities.map((amenity, index) =>
-    renderCard(amenity, index, "r1"),
-  );
-  const row2 = [...amenities]
-    .reverse()
-    .map((amenity, index) =>
-      renderCard(amenity, amenities.length - 1 - index, "r2"),
-    );
+  const row = columns.map((column, columnIndex) => (
+    <div key={columnIndex} className="amenity-art-column">
+      {column.cards.map(({ index, grow }) => (
+        <AmenityArtCard key={amenities[index].tag} amenity={amenities[index]} grow={grow} />
+      ))}
+    </div>
+  ));
 
   return (
-    <section ref={sectionRef} className="amenities-marquee-section">
+    <section
+      ref={sectionRef}
+      className="amenities-marquee-section"
+      aria-label="Amenities at every Work Hall"
+      // Mouse only: the strip glides to a stop so a hovered card can flip and be read.
+      onPointerEnter={(event) => event.pointerType === "mouse" && setIsHovering(true)}
+      onPointerLeave={() => setIsHovering(false)}
+      onFocus={() => setIsHovering(true)}
+      onBlur={() => setIsHovering(false)}
+    >
       <ScrollVelocity
-        texts={[row1, row2]}
-        velocity={80}
-        paused={!isInView}
+        texts={[row]}
+        velocity={42}
+        paused={!isInView || isHovering}
         className="amenity-row"
-        numCopies={12}
+        numCopies={3}
         parallaxClassName="amenity-parallax"
         scrollerClassName="amenity-scroller"
       />

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import Card from "./Card/Card";
 import type { CarouselImage } from "../types";
 import { ShuffleText } from "./shared/ShuffleText";
@@ -18,6 +18,12 @@ interface PlanCardProps {
 
 const PLANS_MIN_OPACITY = 0.18;
 const PLANS_MAX_OPACITY = 1;
+// Vertical scroll distance per pixel of horizontal travel (higher = slower, calmer track).
+const SCROLL_TO_TRAVEL_RATIO = 0.85;
+// Share of the remaining distance the track covers each 60fps frame (lower = softer glide).
+const TRACK_SMOOTHING = 0.14;
+// Scroll progress at which each group (Individuals, Teams, Enterprises) is fully in focus.
+const GROUP_FOCUS_POINTS = [0, 0.5, 1] as const;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -129,49 +135,59 @@ function getGroupOpacity(progress: number, focusPoint: number) {
 //   },
 // ] as const;
 
+// Photos used on the Figma plan cards (Unsplash).
+const photo = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=75`;
+const CORRIDOR = photo("1497366216548-37526070297c");
+const LOUNGE = photo("1524758631624-e2822e304c36");
+const GLASS_OFFICE = photo("1497366412874-3415097a27e7");
+const GLASS_HALL = photo("1497366754035-f200968a6e72");
+const MEETING_ROOM = photo("1497366811353-6870744d04b2");
+
+// Copy and card order follow Figma (Page 1: "Individuals" and "Teams" frames).
 const individualCards: PlanCardProps[] = [
   {
     planName: "Air",
     title: "Air",
     description:
-      "Pick a desk, plug in, get to work. No strings, no commitment.maybe a different spot every once in a while, but just a greatplace to spend your day.",
-    tags: ["Freelancers", "Founders", "Small Teams", "Remote Workers"],
+      "Access to shared seating whenever you need focused work. Plug in, settle down, and get moving without the commitment of a fixed desk.",
+    tags: ["Freelancers", "Consultants", "Students", "Remote Employees"],
     learnMoreUrl: "#air",
     images: [
-      {
-        src: "https://picsum.photos/seed/air-1/900/700",
-        alt: "Open desks near a sunlit window",
-      },
-      {
-        src: "https://picsum.photos/seed/air-2/900/700",
-        alt: "Shared workspace with bench seating",
-      },
-      {
-        src: "https://picsum.photos/seed/air-3/900/700",
-        alt: "Coffee bar in the lounge area",
-      },
+      { src: CORRIDOR, alt: "Corridor of glass-walled offices" },
+      { src: LOUNGE, alt: "Lounge with armchairs and a floor lamp" },
+      { src: GLASS_HALL, alt: "Hallway lined with glass partitions" },
     ],
   },
   {
-    planName: "X",
-    title: "X",
+    planName: "Desk",
+    title: "Desk",
     description:
-      "Your own dedicated desk, waiting for you every morning.Leave your monitors, leave your things, it's all yoursand only yours.",
-    tags: ["Founders", "Students", " Creatives/Creators", "Remote Employees"],
-    learnMoreUrl: "#x-plan",
+      "Your own dedicated desk, ready every day. Leave your monitor, keep your setup intact, and work with consistency in a premium shared space.",
+    tags: ["Creators", "Founders", "Analysts", "Solo Operators"],
+    learnMoreUrl: "#desk",
     images: [
-      {
-        src: "https://picsum.photos/seed/xplan-1/900/700",
-        alt: "Assigned desk with personal storage",
-      },
-      {
-        src: "https://picsum.photos/seed/xplan-2/900/700",
-        alt: "Member at their regular desk",
-      },
-      {
-        src: "https://picsum.photos/seed/xplan-3/900/700",
-        alt: "Community lounge",
-      },
+      { src: LOUNGE, alt: "Lounge with armchairs and a floor lamp" },
+      { src: MEETING_ROOM, alt: "Meeting room with a long table" },
+      { src: CORRIDOR, alt: "Corridor of glass-walled offices" },
+    ],
+  },
+  {
+    planName: "Nox",
+    title: "Nox",
+    description:
+      "Shared or fixed desk access at a reduced rate. Same space, same amenities, same great community, just during the quieter hours of the night.",
+    tags: [
+      "Budget-Conscious Freelancers",
+      "Overseas Client Work",
+      "Part-Time Workers",
+      "Night Owls",
+    ],
+    learnMoreUrl: "#nox",
+    images: [
+      { src: CORRIDOR, alt: "Corridor of glass-walled offices" },
+      { src: GLASS_HALL, alt: "Hallway lined with glass partitions" },
+      { src: LOUNGE, alt: "Lounge with armchairs and a floor lamp" },
     ],
   },
 ];
@@ -181,49 +197,39 @@ const teamCards: PlanCardProps[] = [
     planName: "Base",
     title: "Base",
     description:
-      "Dedicated desks for your whole team in our shared space.Sit together, collaborate freely, and still be around the energyof a full community.",
-    tags: [
-      "Startups",
-      "Smaller Teams/Groups",
-      " Growing Businesses",
-      "Agencies",
-    ],
-    learnMoreUrl: "#box",
+      "Dedicated desks for your whole team in a shared environment. Sit together, collaborate freely, and stay close to the energy of a full community.",
+    tags: ["Startups", "Growing Businesses", "Small Team Pods", "Agencies"],
+    learnMoreUrl: "#base",
     images: [
-      {
-        src: "https://picsum.photos/seed/box-1/900/700",
-        alt: "Private office with a closed door",
-      },
-      {
-        src: "https://picsum.photos/seed/box-2/900/700",
-        alt: "Small team meeting inside their office",
-      },
-      {
-        src: "https://picsum.photos/seed/box-3/900/700",
-        alt: "Whiteboard wall in private office",
-      },
+      { src: GLASS_OFFICE, alt: "Glass-walled team office" },
+      { src: MEETING_ROOM, alt: "Meeting room with a long table" },
+      { src: CORRIDOR, alt: "Corridor of glass-walled offices" },
     ],
   },
   {
     planName: "Box",
     title: "Box",
     description:
-      "A private, lockable office that's entirely yours. Confidential,personal, privacy focused, and layout set up exactly the way you want it.",
-    tags: ["Founders", "Students", "Creatives/Creators", "Employees"],
-    learnMoreUrl: "#enterprise",
+      "A private, lockable office that is entirely yours. Confidential, personal, and set up exactly the way your team wants it.",
+    tags: ["Studios", "Founder Teams", "Client-Facing Teams", "Operations"],
+    learnMoreUrl: "#box",
     images: [
-      {
-        src: "https://picsum.photos/seed/enterprise-1/900/700",
-        alt: "Branded reception for a private suite",
-      },
-      {
-        src: "https://picsum.photos/seed/enterprise-2/900/700",
-        alt: "Glass walled boardroom",
-      },
-      {
-        src: "https://picsum.photos/seed/enterprise-3/900/700",
-        alt: "Open floor office with skyline view",
-      },
+      { src: GLASS_OFFICE, alt: "Glass-walled team office" },
+      { src: GLASS_HALL, alt: "Hallway lined with glass partitions" },
+      { src: MEETING_ROOM, alt: "Meeting room with a long table" },
+    ],
+  },
+  {
+    planName: "Suite",
+    title: "Suite",
+    description:
+      "A fully private suite with room to grow. Build out leadership cabins, collaboration areas, and custom layouts around your workflow.",
+    tags: ["Product Teams", "Sales Teams", "Support Teams", "Scaling Startups"],
+    learnMoreUrl: "#suite",
+    images: [
+      { src: CORRIDOR, alt: "Corridor of glass-walled offices" },
+      { src: MEETING_ROOM, alt: "Meeting room with a long table" },
+      { src: GLASS_OFFICE, alt: "Glass-walled team office" },
     ],
   },
 ];
@@ -339,19 +345,23 @@ function PlansGroup({
   cards,
   description: _description,
   mobile = false,
-  opacity,
+  groupRef,
 }: {
   title: string;
   cards: ReadonlyArray<PlanCardProps>;
   description: string;
   mobile?: boolean;
-  opacity?: number;
+  groupRef?: Ref<HTMLElement>;
 }) {
   return (
     <section
+      ref={groupRef}
       className={mobile ? "plans-group plans-group--mobile" : "plans-group"}
-      style={opacity !== undefined ? { opacity, transition: "opacity 0.3s ease" } : undefined}
     >
+      <div className="plans-header__kicker plans-group__kicker">
+        <span className="plans-header__square" aria-hidden="true" />
+        <span>Plans</span>
+      </div>
       <h3>{title}</h3>
 
       <div className={mobile ? "cards-row cards-row--mobile" : "cards-row"}>
@@ -379,7 +389,10 @@ function PlansGroup({
 export function PlansScrollSection() {
   const outerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
+  const progressBarRef = useRef<HTMLSpanElement>(null);
+  const individualsRef = useRef<HTMLElement>(null);
+  const teamsRef = useRef<HTMLElement>(null);
+  const enterprisesRef = useRef<HTMLElement>(null);
   const [scrollBudget, setScrollBudget] = useState(SCROLL_BUDGET);
   const scrollBudgetRef = useRef(SCROLL_BUDGET);
   const maxTranslateRef = useRef(0);
@@ -403,15 +416,67 @@ export function PlansScrollSection() {
 
   useEffect(() => {
     if (!isDesktop) {
-      setProgress(0);
-      setScrollBudget(SCROLL_BUDGET);
-      scrollBudgetRef.current = SCROLL_BUDGET;
-      maxTranslateRef.current = 0;
       if (trackRef.current) {
-        trackRef.current.style.transform = "translateX(0)";
+        trackRef.current.style.transform = "translate3d(0, 0, 0)";
       }
       return;
     }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let current = 0;
+    let target = 0;
+    let frame = 0;
+    let lastTime = 0;
+
+    // Writes the track position, group fades and progress bar straight to the DOM:
+    // no React re-render per frame, so all three move in lockstep.
+    const apply = (value: number) => {
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translate3d(${-value * maxTranslateRef.current}px, 0, 0)`;
+      }
+      const groups = [individualsRef.current, teamsRef.current, enterprisesRef.current];
+      GROUP_FOCUS_POINTS.forEach((focusPoint, index) => {
+        const group = groups[index];
+        if (group) group.style.opacity = String(getGroupOpacity(value, focusPoint));
+      });
+      if (progressBarRef.current) {
+        progressBarRef.current.style.transform = `scaleX(${value})`;
+      }
+    };
+
+    const readTarget = () => {
+      const outer = outerRef.current;
+      if (!outer || scrollBudgetRef.current <= 0) return 0;
+      return clamp(-outer.getBoundingClientRect().top / scrollBudgetRef.current, 0, 1);
+    };
+
+    // Eases toward the scroll position; frame-rate independent, stops once settled.
+    const tick = (time: number) => {
+      // Cap long gaps (tab switch) but let slow devices still catch up in real time.
+      const elapsed = lastTime ? Math.min(250, time - lastTime) : 1000 / 60;
+      lastTime = time;
+      const ease = 1 - Math.pow(1 - TRACK_SMOOTHING, elapsed / (1000 / 60));
+      current += (target - current) * ease;
+      if (Math.abs(target - current) < 0.0004) current = target;
+      apply(current);
+
+      if (current === target) {
+        frame = 0;
+        lastTime = 0;
+      } else {
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    const handleScroll = () => {
+      target = readTarget();
+      if (reducedMotion.matches) {
+        current = target;
+        apply(current);
+        return;
+      }
+      if (!frame) frame = requestAnimationFrame(tick);
+    };
 
     const calculateTrackMetrics = () => {
       const track = trackRef.current;
@@ -426,7 +491,7 @@ export function PlansScrollSection() {
 
       const nextBudget =
         nextMaxTranslate > 0
-          ? Math.max(MIN_SCROLL_BUDGET, Math.round(nextMaxTranslate * 0.58))
+          ? Math.max(MIN_SCROLL_BUDGET, Math.round(nextMaxTranslate * SCROLL_TO_TRAVEL_RATIO))
           : 0;
 
       if (scrollBudgetRef.current !== nextBudget) {
@@ -435,39 +500,21 @@ export function PlansScrollSection() {
       }
     };
 
-    const handleScroll = () => {
-      const outer = outerRef.current;
-      const track = trackRef.current;
-      if (!outer || !track) return;
-
-      if (scrollBudgetRef.current <= 0) {
-        track.style.transform = "translateX(0)";
-        setProgress(0);
-        return;
-      }
-
-      const outerRect = outer.getBoundingClientRect();
-      const scrolledIntoSection = -outerRect.top;
-      const clampedScroll = Math.max(
-        0,
-        Math.min(scrollBudgetRef.current, scrolledIntoSection),
-      );
-      const nextProgress = clampedScroll / scrollBudgetRef.current;
-
-      track.style.transform = `translateX(-${nextProgress * maxTranslateRef.current}px)`;
-      setProgress(nextProgress);
+    const handleResize = () => {
+      calculateTrackMetrics();
+      handleScroll();
     };
 
     calculateTrackMetrics();
+    current = target = readTarget();
+    apply(current);
     window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", calculateTrackMetrics);
-    window.addEventListener("resize", handleScroll);
-    handleScroll();
+    window.addEventListener("resize", handleResize);
 
     return () => {
+      cancelAnimationFrame(frame);
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", calculateTrackMetrics);
-      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("resize", handleResize);
     };
   }, [isDesktop]);
 
@@ -478,28 +525,20 @@ export function PlansScrollSection() {
         aria-labelledby="plans-title"
       >
         <div className="plans-header plans-header--mobile">
-          <div className="plans-header__kicker">
-            <span className="plans-header__square" aria-hidden="true" />
-            <span>Plans</span>
-          </div>
-
-          <div className="plans-header__heading" id="plans-title">
-            <span><ShuffleText text="Because We've Got A Space" finalColor="#15110d" /></span>
-            <span className="is-accent"><ShuffleText text="Every Way You Work" startDelay={120} finalColor="#15110d" /></span>
-          </div>
+          <PlansIntroHeading />
         </div>
 
         <div className="plans-mobile-groups">
           <PlansGroup
-            title="Teams"
-            cards={teamCards}
-            description="Private offices, enterprise setups, and tailored room to grow for teams that need more privacy, more structure, and a base that can scale with them."
+            title="Individuals"
+            cards={individualCards}
+            description="Flexible coworking, assigned desks, and virtual setup for people who need a reliable everyday base without committing to more room than the day needs."
             mobile
           />
           <PlansGroup
-            title="Freelancers"
-            cards={individualCards}
-            description="Flexible coworking, assigned desks, and virtual setup for people who need a reliable everyday base without committing to more room than the day needs."
+            title="Teams"
+            cards={teamCards}
+            description="Private offices, enterprise setups, and tailored room to grow for teams that need more privacy, more structure, and a base that can scale with them."
             mobile
           />
           <PlansGroup
@@ -513,11 +552,13 @@ export function PlansScrollSection() {
     );
   }
 
-  const teamsOpacity = getGroupOpacity(progress, 0);
-  const freelancersOpacity = getGroupOpacity(progress, 0.5);
-  const enterprisesOpacity = getGroupOpacity(progress, 1);
-
   return (
+    <>
+      {/* In Figma the intro heading scrolls away before the sticky plan track. */}
+      <div className="plans-intro">
+        <PlansIntroHeading />
+      </div>
+
     <section
       ref={outerRef}
       className="plans-scroll-section"
@@ -525,34 +566,22 @@ export function PlansScrollSection() {
       aria-labelledby="plans-title"
     >
       <div className="plans-scroll-section__sticky">
-        <div className="plans-header">
-          <div className="plans-header__kicker">
-            <span className="plans-header__square" aria-hidden="true" />
-            <span>Plans</span>
-          </div>
-
-          <div className="plans-header__heading" id="plans-title">
-            <span><ShuffleText text="Because We've Got A Space" finalColor="#15110d" /></span>
-            <span className="is-accent"><ShuffleText text="Every Way You Work" startDelay={120} finalColor="#15110d" /></span>
-          </div>
-        </div>
-
         <div className="plans-track-zone">
           <div ref={trackRef} className="plans-track">
             <PlansGroup
-              title="Teams"
-              cards={teamCards}
-              description="Private offices, enterprise setups, and tailored room to grow for teams that need more privacy, more structure, and a base that can scale with them."
-              opacity={teamsOpacity}
+              title="Individuals"
+              cards={individualCards}
+              description="Flexible coworking, assigned desks, and virtual setup for people who need a reliable everyday base without committing to more room than the day needs."
+              groupRef={individualsRef}
             />
 
             <div className="group-divider" aria-hidden="true" />
 
             <PlansGroup
-              title="Freelancers"
-              cards={individualCards}
-              description="Flexible coworking, assigned desks, and virtual setup for people who need a reliable everyday base without committing to more room than the day needs."
-              opacity={freelancersOpacity}
+              title="Teams"
+              cards={teamCards}
+              description="Private offices, enterprise setups, and tailored room to grow for teams that need more privacy, more structure, and a base that can scale with them."
+              groupRef={teamsRef}
             />
 
             <div className="group-divider" aria-hidden="true" />
@@ -561,18 +590,35 @@ export function PlansScrollSection() {
               title="Enterprises"
               cards={enterpriseCards}
               description="Placeholder enterprise offers for larger organizations that need scale, private infrastructure, and bespoke operational setups."
-              opacity={enterprisesOpacity}
+              groupRef={enterprisesRef}
             />
           </div>
         </div>
 
         <span
+          ref={progressBarRef}
           className="plans-scroll-section__progress"
-          style={{ width: `${progress * 100}%` }}
+          style={{ width: "100%", transform: "scaleX(0)", transformOrigin: "left center" }}
           aria-hidden="true"
         />
       </div>
     </section>
+    </>
+  );
+}
+
+function PlansIntroHeading() {
+  return (
+    <>
+      <h2 className="plans-header__heading" id="plans-title">
+        <span><ShuffleText text="Because we've got a space" finalColor="#15110d" /></span>
+        <span className="is-accent"><ShuffleText text="for every way you work." startDelay={120} finalColor="#15110d" /></span>
+      </h2>
+      <p className="plans-intro__copy">
+        Whether you&apos;re a freelancer who needs a desk or an enterprise that needs a floor,
+        we have a plan built around you, not the other way around.
+      </p>
+    </>
   );
 }
 
